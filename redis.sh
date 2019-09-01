@@ -6,4 +6,5 @@ if [ ! -d redis-stable/src ]; then
 fi
 cd redis-stable
 make
-src/redis-server
+src/redis-server &&
+# ../venv/bin/celery worker -A server.celery --loglevel=debug
