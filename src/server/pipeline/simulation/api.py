@@ -6,15 +6,15 @@ from .tasks import run_simulation
 simulation_api = Blueprint('simulation_api', __name__)
 
 
-@simulation_api.route('/simulation/run', methods=['POST'])
+@simulation_api.route('/cli/run', methods=['POST'])
 def run():
     task = run_simulation.delay([{'something': 'smthing'}])
     return jsonify({"taskId": task.id}), 202, {'Location': url_for('simulation_api.status', task_id=task.id)}
 
 
-@simulation_api.route('/simulation/status')
+@simulation_api.route('/cli/status')
 def status():
-    return {}
+    return jsonify({"hehe": "xd"})
 
 
 def unpack_chain(nodes):
