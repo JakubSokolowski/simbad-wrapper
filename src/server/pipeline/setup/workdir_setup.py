@@ -1,30 +1,68 @@
+import datetime
 import json
 import os
 
-from server.config.constants import OUT_PATH
+from flask import logging
 
-current_id = 0
-
-
-def request_to_json(req):
-    print(req)
-    return json.loads(req.data.decode('utf8'))
+from config.settings import SIMBAD_DATA_PATH
+from database import db_session
+from models.simulation import Simulation, Step, Artifact, SimulationStep
 
 
-def get_available_dir_name(name) -> str:
-    id = 0
-    work_dir = OUT_PATH + '/SIM_{}_CONF_{}'.format(current_id, name)
-    if os.path.exists(work_dir):
-        newId = int(work_dir.split('_')[1]) + 1
+def get_conf_name(name: str) -> str:
+    if name.endswith('.json'):
+        return name
+    return name + '.json'
 
 
-def simulation_workdir_setup(conf, name) -> str:
-    print('directory setup')
-    global current_id
-    work_dir = OUT_PATH + '/SIM_{}_CONF_{}'.format(current_id, name)
-    os.mkdir(work_dir)
-    current_id += 1
-    with open('{}/{}'.format(work_dir, name + '.json'), 'w+') as f:
+def create_workdir(conf_name: str, simulation_id: int) -> str:
+    """
+    Creates new dir for simulation in SIMBAD_DATA_PATH
+    :param conf_name:
+    :param simulation_id:
+    :return: path to created workdir
+    """
+    work_dir_path = SIMBAD_DATA_PATH + '/SIM_{}_CONF_{}'.format(simulation_id, conf_name)
+    if not os.path.exists(work_dir_path):
+        os.mkdir(work_dir_path)
+
+    return work_dir_path
+
+
+def setup_workdir(request_data: dict) -> (str, str):
+    """
+    Creates new dir for simulation and places simulation configuration file in it
+    :param request_data: Flask request with configuration
+    :return: tuple with path to workdir and saved configuration
+    """
+    conf_name = get_conf_name(request_data['configurationName'])
+    conf = request_data['configuration']
+
+    start_time = datetime.datetime.now()
+
+    simulation = Simulation(started_utc=start_time, name="test_simulation", current_step=Step.CONF)
+    step = SimulationStep(finished_utc=start_time, origin=Step.CONF, simulation=simulation)
+
+    workdir_path = create_workdir(conf_name, simulation.id)
+    conf_path = '{}/{}'.format(workdir_path, conf_name)
+
+    simulation.workdir = workdir_path
+
+    with open(conf_path, 'w+') as f:
         json.dump(conf, f, indent=2)
 
-    return work_dir
+    configuration = Artifact(
+        size_kb=os.path.getsize(conf_path) << 10,
+        path=conf_path,
+        created_utc=start_time,
+        simulation=simulation,
+        step=step
+    )
+
+    db_session.begin()
+    db_session.add_all([configuration, step, simulation])
+    db_session.commit()
+
+    return workdir_path, conf_path
+
+

@@ -10,8 +10,9 @@ from server.pipeline.simulation.api import simulation_api
 from server.pipeline.simulation import tasks as simulation_tasks
 from server.pipeline.simbad_cli import tasks as simbad_cli_task
 
+from database import init_db, init_engine
+
 logger = logging.getLogger()
-db = SQLAlchemy()
 
 
 def create_app(debug=False):
@@ -27,12 +28,14 @@ def entrypoint(debug=False, mode='app'):
     assert mode in ('app', 'celery'), 'bad mode "{}"'.format(mode)
 
     app = Flask(__name__)
-
     app.debug = debug
-
     configure_app(app)
-    db.init_app(app)
+
+    init_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+    init_db()
+
     configure_logging(debug=debug)
+
     configure_celery(app, demo_tasks.celery)
     configure_celery(app, simulation_tasks.celery)
     configure_celery(app, simbad_cli_task.celery)
@@ -49,7 +52,7 @@ def entrypoint(debug=False, mode='app'):
 
 def configure_app(app):
     logger.info('configuring flask app')
-    app.config.from_object('server.config.settings')
+    app.config.from_object('config.settings')
 
 
 def configure_celery(app, celery):
@@ -59,14 +62,14 @@ def configure_celery(app, celery):
 
     # subclass task base for app context
     # http://flask.pocoo.org/docs/0.12/patterns/celery/
-    TaskBase = celery.Task
+    task_base = celery.Task
 
-    class AppContextTask(TaskBase):
+    class AppContextTask(task_base):
         abstract = True
 
         def __call__(self, *args, **kwargs):
             with app.app_context():
-                return TaskBase.__call__(self, *args, **kwargs)
+                return task_base.__call__(self, *args, **kwargs)
 
     celery.Task = AppContextTask
 

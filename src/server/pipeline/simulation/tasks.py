@@ -3,6 +3,7 @@ import logging
 import time
 
 from celery import Celery, chain
+from celery.result import AsyncResult
 
 from server.pipeline.simbad_cli.tasks import cli_step
 
@@ -11,10 +12,9 @@ celery = Celery(__name__, autofinalize=False)
 
 
 @celery.task(bind=True, trail=True, name='Simulation')
-def run_simulation(self, req_json):
+def run_simulation(self, req_json) -> AsyncResult:
     result = chain(
-        cli_step_2.s(req_json),
-        cli_step.s()
+        cli_step.s(req_json)
     )()
     return result
 
