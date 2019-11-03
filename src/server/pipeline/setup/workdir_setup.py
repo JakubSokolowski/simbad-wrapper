@@ -29,7 +29,7 @@ def create_workdir(conf_name: str, simulation_id: int) -> str:
     return work_dir_path
 
 
-def setup_workdir(request_data: dict) -> (str, str):
+def setup_workdir(request_data: dict) -> (int, str, str):
     """
     Creates new dir for simulation and places simulation configuration file in it
     :param request_data: Flask request with configuration
@@ -38,10 +38,14 @@ def setup_workdir(request_data: dict) -> (str, str):
     conf_name = get_conf_name(request_data['configurationName'])
     conf = request_data['configuration']
 
-    start_time = datetime.datetime.now()
+    start_time = datetime.datetime.utcnow()
 
     simulation = Simulation(started_utc=start_time, name="test_simulation", current_step=Step.CONF)
-    step = SimulationStep(finished_utc=start_time, origin=Step.CONF, simulation=simulation)
+    db_session.add(simulation)
+    db_session.flush()
+    step = SimulationStep(started_utc=start_time, origin=Step.CONF, simulation_id=simulation.id)
+    db_session.add(step)
+    db_session.flush()
 
     workdir_path = create_workdir(conf_name, simulation.id)
     conf_path = '{}/{}'.format(workdir_path, conf_name)
@@ -55,14 +59,17 @@ def setup_workdir(request_data: dict) -> (str, str):
         size_kb=os.path.getsize(conf_path) << 10,
         path=conf_path,
         created_utc=start_time,
-        simulation=simulation,
-        step=step
+        step_id=step.id
     )
+    simulation.artifacts.append(configuration)
+    simulation.steps.append(step)
+    step.artifacts.append(configuration)
 
     db_session.begin()
     db_session.add_all([configuration, step, simulation])
+    db_session.flush()
     db_session.commit()
 
-    return workdir_path, conf_path
+    return step.id, workdir_path, conf_path
 
 
