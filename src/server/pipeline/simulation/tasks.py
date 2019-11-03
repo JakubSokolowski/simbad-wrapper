@@ -12,9 +12,9 @@ celery = Celery(__name__, autofinalize=False)
 
 
 @celery.task(bind=True, trail=True, name='Simulation')
-def run_simulation(self, req_json) -> AsyncResult:
+def run_simulation(self, paths: (int, str, str)) -> AsyncResult:
     result = chain(
-        cli_step.s(req_json)
+        cli_step.s(paths)
     )()
     return result
 
