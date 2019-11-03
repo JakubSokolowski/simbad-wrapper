@@ -3,6 +3,7 @@ import logging
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
+from server.encoder import AlchemyEncoder
 from server.pipeline import celery
 from server.pipeline.demo import tasks as demo_tasks
 from server.pipeline.demo.api import demo_api
@@ -29,6 +30,7 @@ def entrypoint(debug=False, mode='app'):
 
     app = Flask(__name__)
     app.debug = debug
+    app.json_encoder = AlchemyEncoder
     configure_app(app)
 
     init_engine(app.config['SQLALCHEMY_DATABASE_URI'])
