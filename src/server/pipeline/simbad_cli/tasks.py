@@ -6,6 +6,7 @@ import subprocess
 import psutil as psutil
 from celery import Celery
 
+from config.settings import SIMBAD_CLI_BINARY_PATH
 from database import db_session
 from models.simulation import Artifact, SimulationStep, CliRuntimeInfo
 
@@ -35,7 +36,7 @@ def cli_step(self, paths: (int, str, str)) -> Artifact:
     out_path = '{}/cli_out.csv'.format(paths[1])
 
     with open(out_path, 'w') as f:
-        process = subprocess.Popen(('/home/jakub/dev/uni/simbad/data/bin/simbad-cli', paths[2]), stdout=subprocess.PIPE)
+        process = subprocess.Popen((SIMBAD_CLI_BINARY_PATH, paths[2]), stdout=subprocess.PIPE)
         process_info = psutil.Process(process.pid)
         counter = 0
         for c in iter(lambda: process.stdout.read(1), b''):

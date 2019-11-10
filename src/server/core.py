@@ -1,12 +1,11 @@
 import logging
 
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 
+from server.artifacts.api import artifact_api
 from server.encoder import AlchemyEncoder
 from server.pipeline import celery
 from server.pipeline.demo import tasks as demo_tasks
-from server.pipeline.demo.api import demo_api
 from server.pipeline.simulation.api import simulation_api
 from server.pipeline.simulation import tasks as simulation_tasks
 from server.pipeline.simbad_cli import tasks as simbad_cli_task
@@ -43,8 +42,8 @@ def entrypoint(debug=False, mode='app'):
     configure_celery(app, simbad_cli_task.celery)
 
     # register blueprints
-    app.register_blueprint(demo_api, url_prefix='/api')
     app.register_blueprint(simulation_api, url_prefix='/api')
+    app.register_blueprint(artifact_api, url_prefix='/api')
 
     if mode == 'app':
         return app

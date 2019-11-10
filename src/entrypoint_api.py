@@ -1,5 +1,4 @@
 import argparse
-import os
 
 from server import create_app
 

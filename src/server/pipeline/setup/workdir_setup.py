@@ -2,8 +2,6 @@ import datetime
 import json
 import os
 
-from flask import logging
-
 from config.settings import SIMBAD_DATA_PATH
 from database import db_session
 from models.simulation import Simulation, Step, Artifact, SimulationStep
@@ -62,8 +60,8 @@ def setup_workdir(request_data: dict) -> (int, str, str):
         step_id=step.id
     )
     simulation.artifacts.append(configuration)
-    simulation.steps.append(step)
     step.artifacts.append(configuration)
+    simulation.steps.append(step)
 
     db_session.begin()
     db_session.add_all([configuration, step, simulation])
