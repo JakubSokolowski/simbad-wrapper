@@ -10,6 +10,7 @@ SIMBAD_DATA_PATH = os.getenv(
 )
 CLI_PATH = ROOT_PATH + '/bin/simbad-cli'
 OUT_PATH = ROOT_PATH + '/output'
+SIMBAD_CLI_BINARY_PATH = os.getenv('SIMBAD_CLI_BINARY_PATH', '/home/jakub/dev/uni/simbad/data/bin/simbad-cli' )
 
 # SQLALCHEMY
 SQLALCHEMY_DATABASE_URI = 'sqlite:///{}/simbad.db'.format(SIMBAD_DATA_PATH)
@@ -21,3 +22,6 @@ CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+
+#FLASK
+PROPAGATE_EXCEPTIONS = True
