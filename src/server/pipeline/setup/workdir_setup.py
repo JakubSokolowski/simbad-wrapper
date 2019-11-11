@@ -27,7 +27,7 @@ def create_workdir(conf_name: str, simulation_id: int) -> str:
     return work_dir_path
 
 
-def setup_workdir(request_data: dict) -> (int, str, str):
+def setup_workdir(request_data: dict) -> (int, str, Artifact):
     """
     Creates new dir for simulation and places simulation configuration file in it
     :param request_data: Flask request with configuration
@@ -68,6 +68,6 @@ def setup_workdir(request_data: dict) -> (int, str, str):
     db_session.flush()
     db_session.commit()
 
-    return step.id, workdir_path, conf_path
+    return step.id, workdir_path, configuration
 
 

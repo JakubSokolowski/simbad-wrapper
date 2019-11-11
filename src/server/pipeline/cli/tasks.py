@@ -15,15 +15,16 @@ celery = Celery(__name__, autofinalize=False)
 
 
 @celery.task(bind=True, name='SIMBAD-CLI')
-def cli_step(self, paths: (int, str, str)) -> Artifact:
+def cli_step(self, workdir: str, conf: Artifact) -> Artifact:
     """
     Celery task for generating CLI output from configuration
+    :param workdir: the working directory of current simulation
+    :param conf: the simulation configuration
     :param self:
-    :param paths:
-    :return:
+    :return: the cli output
     """
     db_session.begin()
-    step = db_session.query(SimulationStep).get(paths[0])
+    step = db_session.query(SimulationStep).get(conf.simulation_id)
     step.celery_id = self.request.id
     runtime_info: CliRuntimeInfo = CliRuntimeInfo(
         memory=0,
@@ -33,10 +34,11 @@ def cli_step(self, paths: (int, str, str)) -> Artifact:
     db_session.add(runtime_info)
     db_session.commit()
 
-    out_path = '{}/cli_out.csv'.format(paths[1])
+    out_path = '{}/cli_out.csv'.format(workdir)
+    conf_path = conf.path
 
     with open(out_path, 'w') as f:
-        process = subprocess.Popen((SIMBAD_CLI_BINARY_PATH, paths[2]), stdout=subprocess.PIPE)
+        process = subprocess.Popen((SIMBAD_CLI_BINARY_PATH, conf_path), stdout=subprocess.PIPE)
         process_info = psutil.Process(process.pid)
         counter = 0
         for c in iter(lambda: process.stdout.read(1), b''):

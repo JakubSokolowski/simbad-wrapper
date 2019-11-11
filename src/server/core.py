@@ -6,7 +6,7 @@ from server.artifacts.api import artifact_api
 from server.encoder import AlchemyEncoder
 from server.pipeline.simulation.api import simulation_api
 from server.pipeline.simulation import tasks as simulation_tasks
-from server.pipeline.simbad_cli import tasks as simbad_cli_task
+from server.pipeline.cli import tasks as simbad_cli_task
 from server.pipeline.simulation.tasks import celery
 
 from database import init_db, init_engine

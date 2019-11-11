@@ -1,11 +1,10 @@
-import datetime
 import logging
 import time
 
 from celery import Celery, chain
 from celery.result import AsyncResult
 
-from server.pipeline.simbad_cli.tasks import cli_step
+from server.pipeline.cli.tasks import cli_step
 
 logger = logging.getLogger()
 celery = Celery(__name__, autofinalize=False)
