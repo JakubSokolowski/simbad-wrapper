@@ -4,7 +4,7 @@ import os
 
 from config.settings import SIMBAD_DATA_PATH
 from database import db_session
-from models.simulation import Simulation, Step, Artifact, SimulationStep
+from models.simulation import SimulationModel, Step, ArtifactModel, SimulationStepModel, Artifact
 
 
 def get_conf_name(name: str) -> str:
@@ -27,7 +27,7 @@ def create_workdir(conf_name: str, simulation_id: int) -> str:
     return work_dir_path
 
 
-def setup_workdir(request_data: dict) -> (int, str, Artifact):
+def setup_workdir(request_data: dict):
     """
     Creates new dir for simulation and places simulation configuration file in it
     :param request_data: Flask request with configuration
@@ -38,10 +38,10 @@ def setup_workdir(request_data: dict) -> (int, str, Artifact):
 
     start_time = datetime.datetime.utcnow()
 
-    simulation = Simulation(started_utc=start_time, name="test_simulation", current_step=Step.CONF)
+    simulation = SimulationModel(started_utc=start_time, name="test_simulation", current_step=Step.CONF)
     db_session.add(simulation)
     db_session.flush()
-    step = SimulationStep(started_utc=start_time, origin=Step.CONF, simulation_id=simulation.id)
+    step = SimulationStepModel(started_utc=start_time, origin=Step.CONF, simulation_id=simulation.id)
     db_session.add(step)
     db_session.flush()
 
@@ -53,7 +53,7 @@ def setup_workdir(request_data: dict) -> (int, str, Artifact):
     with open(conf_path, 'w+') as f:
         json.dump(conf, f, indent=2)
 
-    configuration = Artifact(
+    configuration = ArtifactModel(
         size_kb=os.path.getsize(conf_path) << 10,
         path=conf_path,
         created_utc=start_time,
@@ -68,6 +68,6 @@ def setup_workdir(request_data: dict) -> (int, str, Artifact):
     db_session.flush()
     db_session.commit()
 
-    return step.id, workdir_path, configuration
+    return Artifact(**configuration.__dict__)
 
 

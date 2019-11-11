@@ -5,36 +5,36 @@ import threading
 
 import psutil
 
-from models.simulation import Artifact, CliRuntimeInfo
+from database import db_session
+from models.simulation import ArtifactModel, CliRuntimeInfoModel, Artifact
 from server.executors.local_executor import LocalExecutor
 
 
 class CliLocalExecutor(LocalExecutor):
-    def __init__(self, executable_path: str, workdir: str):
+    def __init__(self, executable_path: str):
         """
         Creates local executor for SIMBAD-CLI
         :param executable_path: the path to executable
         :param workdir: the simulation workdir
         """
         super().__init__(executable_path)
-        self.workdir = workdir
-        self.runtime_info: CliRuntimeInfo = CliRuntimeInfo(memory=0, cpu=0)
+        self.runtime_info: CliRuntimeInfoModel = CliRuntimeInfoModel(memory=0, cpu=0)
         self.result = None
 
     def execute(self, in_file: Artifact) -> None:
         """
         Executes SIMBAD-CLI binary in background thread
-        :param in_file: the simulation configuration file
         :return:
         """
-        thread = threading.Thread(target=self.run_cli, args=(self, in_file))
+
+        thread = threading.Thread(target=self.run_cli, args=[in_file])
         thread.daemon = True
         thread.start()
         return
 
     def run_cli(self, conf: Artifact) -> None:
         self.runtime_info.step_id = conf.step_id
-        out_path = '{}/cli_out.csv'.format(self.workdir)
+        out_path = '{}/cli_out.csv'.format(conf.get_workdir())
         conf_path = conf.path
 
         with open(out_path, 'w') as f:
@@ -62,7 +62,8 @@ class CliLocalExecutor(LocalExecutor):
             created_utc=end_timestamp,
             size_kb=os.path.getsize(out_path),
             path=out_path,
-            step_id=conf.step_id
+            step_id=conf.step_id,
+            simulation_id=conf.simulation_id
         )
         self.is_finished = True
         return

@@ -28,7 +28,6 @@ def entrypoint(debug=False, mode='app'):
 
     app = Flask(__name__)
     app.debug = debug
-    app.json_encoder = AlchemyEncoder
     configure_app(app)
 
     init_engine(app.config['SQLALCHEMY_DATABASE_URI'])

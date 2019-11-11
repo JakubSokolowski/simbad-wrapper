@@ -1,4 +1,6 @@
 import enum
+import os
+from dataclasses import dataclass
 
 from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey
 from sqlalchemy.orm import relationship
@@ -14,7 +16,7 @@ class Step(enum.Enum):
     FINISHED = 4
 
 
-class Simulation(Base):
+class SimulationModel(Base):
     __tablename__ = 'simulations'
 
     id = Column(Integer, primary_key=True)
@@ -24,11 +26,11 @@ class Simulation(Base):
     current_step_celery_id = Column(String())
     workdir = Column(String())
     name = Column(String(50), unique=False)
-    steps = relationship("SimulationStep", backref="simulations")
-    artifacts = relationship("Artifact", backref="simulations")
+    steps = relationship("SimulationStepModel", backref="simulations")
+    artifacts = relationship("ArtifactModel", backref="simulations")
 
 
-class SimulationStep(Base):
+class SimulationStepModel(Base):
     __tablename__ = 'steps'
     RELATIONSHIPS_TO_DICT = True
 
@@ -38,14 +40,14 @@ class SimulationStep(Base):
     finished_utc = Column(DateTime)
     origin = Column(Enum(Step))
     celery_id = Column(String())
-    cli_runtime_info = relationship("CliRuntimeInfo", uselist=False, backref="steps")
-    artifacts = relationship("Artifact", backref="steps")
+    cli_runtime_info = relationship("CliRuntimeInfoModel", uselist=False, backref="steps")
+    artifacts = relationship("ArtifactModel", backref="steps")
 
     def __json__(self):
         return ['id', 'simulation_id', 'started_utc', 'finished_utc', 'origin', 'artifacts', 'cli_runtime_info']
 
 
-class Artifact(Base):
+class ArtifactModel(Base):
     __tablename__ = 'artifacts'
 
     id = Column(Integer, primary_key=True)
@@ -58,8 +60,32 @@ class Artifact(Base):
     def __json__(self):
         return ['id', 'created_utc', 'size_kb', 'path']
 
+    def get_workdir(self):
+        return os.path.dirname(os.path.abspath(self.path)) if self.path is not None else None
 
-class CliRuntimeInfo(Base):
+
+@dataclass
+class Artifact:
+    id: int
+    step_id: int
+    simulation_id: int
+    created_utc: DateTime
+    size_kb: int
+    path: str
+
+    def __init__(self, **kwargs):
+        print('Artifact concrete init', kwargs.items())
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+    def __json__(self):
+        return ['id', 'created_utc', 'size_kb', 'path']
+
+    def get_workdir(self):
+        return os.path.dirname(os.path.abspath(self.path)) if self.path is not None else None
+
+
+class CliRuntimeInfoModel(Base):
     __tablename__ = 'cli_runtime_infos'
 
     id = Column(Integer, primary_key=True)
@@ -69,4 +95,3 @@ class CliRuntimeInfo(Base):
 
     def __json__(self):
         return ['cpu', 'memory']
-

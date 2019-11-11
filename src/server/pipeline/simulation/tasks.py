@@ -4,6 +4,7 @@ import time
 from celery import Celery, chain
 from celery.result import AsyncResult
 
+from models.simulation import Artifact
 from server.pipeline.cli.tasks import cli_step
 
 logger = logging.getLogger()
@@ -11,9 +12,9 @@ celery = Celery(__name__, autofinalize=False)
 
 
 @celery.task(bind=True, trail=True, name='Simulation')
-def run_simulation(self, paths: (int, str, str)) -> AsyncResult:
+def run_simulation(self, conf: Artifact) -> AsyncResult:
     result = chain(
-        cli_step.s(paths)
+        cli_step.s(conf)
     )()
     return result
 
@@ -33,6 +34,3 @@ def cli_step_2(self, req_json):
         'stats': 'ayyy ayyy'
     }
     return {'result': 'cli_step_2_result'}
-
-
-
