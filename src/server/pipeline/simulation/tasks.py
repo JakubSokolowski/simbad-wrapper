@@ -11,9 +11,15 @@ celery = Celery(__name__, autofinalize=False)
 
 
 @celery.task(bind=True, trail=True, name='Simulation')
-def run_simulation(self, paths: (int, str, str)) -> AsyncResult:
+def run_simulation(self, artifact_id) -> AsyncResult:
+    """
+
+    :param self:
+    :param artifact_id:
+    :return:
+    """
     result = chain(
-        cli_step.s(paths)
+        cli_step.s(artifact_id)
     )()
     return result
 

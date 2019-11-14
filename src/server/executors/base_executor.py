@@ -1,19 +1,19 @@
-from typing import List
+from typing import List, Union
 
 from models.simulation import Artifact
 
 
 class BaseExecutor:
+    """
+    Base class for executing tasks in different environments
+    """
     def __init__(self):
-        self.is_finished = True
+        self.is_finished = False
         self.result = None
         self.status = None
 
     def execute(self, in_file: Artifact) -> None:
         pass
 
-    def get_status(self):
-        return self.status
-
-    def get_result(self) -> Artifact | List[Artifact]:
-        return self.result
+    def cleanup(self) -> None:
+        pass

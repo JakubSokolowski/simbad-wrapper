@@ -1,6 +1,7 @@
 import enum
+import os
 
-from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey, Float, Boolean
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -55,6 +56,9 @@ class Artifact(Base):
     size_kb = Column(Integer)
     path = Column(String())
 
+    def get_workdir(self):
+        return os.path.dirname(os.path.abspath(self.path)) if self.path is not None else None
+
     def __json__(self):
         return ['id', 'created_utc', 'size_kb', 'path']
 
@@ -69,4 +73,16 @@ class CliRuntimeInfo(Base):
 
     def __json__(self):
         return ['cpu', 'memory']
+
+
+class AnalyzerRuntimeInfo(Base):
+    __tablename__ = 'analyzer_runtime_infos'
+
+    id = Column(Integer, primary_key=True)
+    step_id = Column(Integer, ForeignKey('steps.id'))
+    is_finished = Column(Boolean)
+    progress = Column(Float)
+
+    def __json__(self):
+        return ['progress']
 

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from database import db_session
-from models.simulation import Simulation, SimulationStep
+from models.simulation import Simulation, SimulationStep, Artifact
 from server.pipeline.setup.workdir_setup import setup_workdir
 from server.pipeline.util.request import request_to_json
 from .tasks import run_simulation
@@ -12,12 +12,11 @@ simulation_api = Blueprint('simulation_api', __name__)
 @simulation_api.route('/simulation/start', methods=['POST'])
 def run():
     request_data: dict = request_to_json(request)
-    result = setup_workdir(request_data)
+    conf: Artifact = setup_workdir(request_data)
     db_session.begin()
-    step_id = result[0]
     db_session.flush()
-    step = db_session.query(SimulationStep).get(step_id)
-    task = run_simulation.delay(result)
+    step = db_session.query(SimulationStep).get(conf.step_id)
+    task = run_simulation.delay(conf.id)
     step.celery_id = task.id
     db_session.commit()
     return jsonify(step)

@@ -12,7 +12,7 @@ local_port = 5000
 server = SSHTunnelForwarder(
    (remote_host, remote_port),
    ssh_username=remote_user,
-   ssh_password='password',
+   ssh_password='simbadcore',
    remote_bind_address=(local_host, local_port),
    local_bind_address=(local_host, local_port),
 )

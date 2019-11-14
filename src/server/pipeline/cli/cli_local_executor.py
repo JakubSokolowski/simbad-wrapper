@@ -10,16 +10,16 @@ from server.executors.local_executor import LocalExecutor
 
 
 class CliLocalExecutor(LocalExecutor):
-    def __init__(self, executable_path: str, workdir: str):
+    def __init__(self, executable_path: str):
         """
         Creates local executor for SIMBAD-CLI
         :param executable_path: the path to executable
         :param workdir: the simulation workdir
         """
         super().__init__(executable_path)
-        self.workdir = workdir
-        self.runtime_info: CliRuntimeInfo = CliRuntimeInfo(memory=0, cpu=0)
+        self.status: CliRuntimeInfo = CliRuntimeInfo(memory=0, cpu=0)
         self.result = None
+        self.is_finished = False
 
     def execute(self, in_file: Artifact) -> None:
         """
@@ -27,20 +27,20 @@ class CliLocalExecutor(LocalExecutor):
         :param in_file: the simulation configuration file
         :return:
         """
-        thread = threading.Thread(target=self.run_cli, args=(self, in_file))
+        thread = threading.Thread(target=self.run_cli, args=[in_file])
         thread.daemon = True
         thread.start()
         return
 
     def run_cli(self, conf: Artifact) -> None:
-        self.runtime_info.step_id = conf.step_id
-        out_path = '{}/cli_out.csv'.format(self.workdir)
+        self.status.step_id = conf.step_id
+        out_path = '{}/cli_out.csv'.format(conf.get_workdir())
         conf_path = conf.path
 
         with open(out_path, 'w') as f:
             """
             Run SIMBAD-CLI binary with configuration as argument, and pipe stdout to cli_out.csv file
-            Periodically update runtime info with psutil
+            Periodically update runtime info with psutil.
             """
             process = subprocess.Popen((self.executable_path, conf_path), stdout=subprocess.PIPE)
             process_info = psutil.Process(process.pid)
@@ -51,8 +51,9 @@ class CliLocalExecutor(LocalExecutor):
                 if counter % 1000000 == 0:
                     memory = process_info.memory_info().rss / 1000000
                     cpu = process_info.cpu_percent()
-                    self.runtime_info.memory = memory
-                    self.runtime_info.cpu = cpu
+                    self.status.memory = memory
+                    self.status.cpu = cpu
+                    # TODO: parse some additional status data from stderr?
 
                 line = c.decode('utf-8')
                 f.write(line)
@@ -66,3 +67,4 @@ class CliLocalExecutor(LocalExecutor):
         )
         self.is_finished = True
         return
+
