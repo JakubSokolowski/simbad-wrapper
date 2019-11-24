@@ -9,7 +9,7 @@ from .tasks import run_simulation
 simulation_api = Blueprint('simulation_api', __name__)
 
 
-@simulation_api.route('/simulation/start', methods=['POST'])
+@simulation_api.route('/start', methods=['POST'])
 def run():
     request_data: dict = request_to_json(request)
     conf: Artifact = setup_workdir(request_data)
@@ -28,8 +28,8 @@ def get_current_simulation() -> Simulation:
     ).first()
 
 
-@simulation_api.route('/simulation/status')
-def simulation_status():
+@simulation_api.route('/status')
+def current_simulation_status():
     simulation = get_current_simulation()
     if simulation is not None:
         return jsonify({
@@ -39,6 +39,14 @@ def simulation_status():
         })
     else:
         return jsonify({"status": "IDLE"})
+
+
+@simulation_api.route('/status/<simulation_id>')
+def simulation_status(simulation_id):
+    simulation = db_session.query(Simulation).get(simulation_id)
+    if simulation is not None:
+        return jsonify(simulation)
+    return 404
 
 
 @simulation_api.route('/step/<step_id>')
