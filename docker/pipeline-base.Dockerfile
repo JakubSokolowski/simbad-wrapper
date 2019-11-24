@@ -1,20 +1,6 @@
-FROM python:3.7.5-alpine3.9
-
+FROM continuumio/miniconda3:4.7.12
+RUN conda install -c conda-forge numpy pyarrow matplotlib pandas fire sshtunnel psutil
+run apt-get update && apt-get install -y libboost-program-options-dev libc-dev libc6 libstdc++6
 WORKDIR /usr/simbad-server/app
-RUN apk update && apk upgrade
-RUN apk add boost-program_options \
-    gcc \
-    libc-dev \
-    libc6-compat \
-    libstdc++ \
-    fortify-headers \
-    linux-headers \
-    make \
-    openssl-dev \
-    libffi-dev \
-    --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main
-
-RUN pip install --upgrade pip
-
-COPY ./docker/requirements.txt /usr/simbad-server/app
-RUN pip install -r /usr/simbad-server/app/requirements.txt
+COPY ./docker/conda-req.txt /usr/simbad-server/app
+RUN conda install --file /usr/simbad-server/app/conda-req.txt

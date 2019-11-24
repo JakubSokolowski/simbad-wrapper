@@ -1,4 +1,6 @@
-FROM jsokolowski/pipeline-base:latest
+FROM jsokolowski/pipeline-base:debian-edge
+RUN pip install redis
 
 COPY ./src /usr/simbad-server/app
-COPY ./bin/simbad-cli /simbad-cli
+
+COPY --from=jsokolowski/simbad-cli:gcc /code/build/cli/SimBaD-cli /simbad-cli
