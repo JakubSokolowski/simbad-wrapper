@@ -41,6 +41,14 @@ def current_simulation_status():
         return jsonify({"status": "IDLE"})
 
 
+@simulation_api.route('/latest')
+def get_latest_simulation():
+    simulation = db_session.query(Simulation).order_by(Simulation.id.desc()).first()
+    if simulation is not None:
+        return jsonify(simulation)
+    return "FAILED"
+
+
 @simulation_api.route('/status/<simulation_id>')
 def simulation_status(simulation_id):
     simulation = db_session.query(Simulation).get(simulation_id)
