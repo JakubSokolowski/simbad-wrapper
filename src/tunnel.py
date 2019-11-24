@@ -17,11 +17,11 @@ server = SSHTunnelForwarder(
    local_bind_address=(local_host, local_port),
 )
 
-server.start()
+# server.start()
 
 for i in range(0, 10):
-   r = requests.get('http://127.0.0.1:5000').content
+   r = requests.post('http://127.0.0.1:5000', json={"ayy": "lmao"}).content
    sleep(0.2)
    print(r)
 
-server.stop()
+# server.stop()
