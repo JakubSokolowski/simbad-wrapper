@@ -1,6 +1,7 @@
 import datetime
 import enum
 import logging
+import os
 from time import sleep
 from typing import List
 
@@ -9,7 +10,7 @@ from sshtunnel import SSHTunnelForwarder
 
 import config.settings as settings
 from database import db_session
-from models.simulation import Artifact, SimulationStep, AnalyzerRuntimeInfo
+from models.simulation import Artifact, SimulationStep, AnalyzerRuntimeInfo, Simulation, Step
 from server.executors import BaseExecutor
 from server.pipeline.analyzer.analyzer_http_executor import AnalyzerHttpExecutor
 from server.pipeline.analyzer.analyzer_ssh_executor import AnalyzerSshExecutor
@@ -38,8 +39,8 @@ def get_analyzer_ssh_executor() -> AnalyzerSshExecutor:
         (settings.SIMBAD_ANALYZER_HOST, 22),
         ssh_username=settings.SIMBAD_ANALYZER_USER,
         ssh_password=settings.SIMBAD_ANALYZER_PASSWORD,
-        local_bind_address=('127.0.0.1', settings.SIMBAD_ANALYZER_LOCAL_PORT),
-        remote_bind_address=('127.0.0.1', settings.SIMBAD_ANALYZER_LOCAL_PORT)
+        local_bind_address=('127.0.0.1', int(settings.SIMBAD_ANALYZER_LOCAL_PORT)),
+        remote_bind_address=('127.0.0.1', int(settings.SIMBAD_ANALYZER_LOCAL_PORT))
 
     )
 
@@ -60,20 +61,36 @@ def get_analyzer_executor():
     return {
         ExecutorType.HTTP: get_http_analyzer_executor(),
         ExecutorType.SSH: get_analyzer_ssh_executor()
-    }.get(ExecutorType[settings.SIMBAD_CLI_EXECUTOR])
+    }.get(ExecutorType[settings.SIMBAD_ANALYZER_EXECUTOR])
 
 
 @celery.task(bind=True, name='SIMBAD-ANALYZER')
-def analyzer_task(self, artifact_id: int) -> List[(int, str)]:
+def analyzer_step(self, artifact_id: int) -> list:
+    print('analyzer artifact id', artifact_id)
     cli_out: Artifact = db_session.query(Artifact).get(artifact_id)
-    step = db_session.query(SimulationStep).get(cli_out.simulation_id)
-    step.celery_id = self.request.id
-    db_session.begin()
+    print('analyzer artifact id', cli_out.__dict__)
 
+    simulation: Simulation = db_session.query(Simulation).get(cli_out.simulation_id)
+    start_time = datetime.datetime.utcnow()
+    step: SimulationStep = SimulationStep(started_utc=start_time, origin="ANALYZER", simulation_id=simulation.id)
+    db_session.flush()
+    step.celery_id = self.request.id
+    simulation.steps.append(step)
+    simulation.steps.append(step)
+    simulation.current_step = "ANALYZER"
+    simulation.current_step_id = step.id
+
+    db_session.begin()
+    db_session.add_all([simulation, step])
+    db_session.commit()
+
+    db_session.begin()
     runtime_info: AnalyzerRuntimeInfo = AnalyzerRuntimeInfo(
         progress=0,
+        is_finished=False,
         step_id=step.id
     )
+
     db_session.add(runtime_info)
     db_session.commit()
 
@@ -87,10 +104,17 @@ def analyzer_task(self, artifact_id: int) -> List[(int, str)]:
         sleep(settings.SIMBAD_ANALYZER_POLLING_PERIOD)
 
     db_session.begin()
-    result: List[Artifact] = executor.result
+    print(executor.result)
+    result: List[Artifact] = list(map(lambda path: Artifact(path=path), executor.result))
+
+    for artifact in result:
+        artifact.step_id = step.id
+        artifact.simulation_id = step.simulation_id
+        artifact.size_kb = os.path.getsize(artifact.path)
+
     step.finished_utc = datetime.datetime.utcnow()
     runtime_info.progress = 100
     db_session.add_all(result)
     db_session.commit()
 
-    return list(map(lambda artifact: (artifact.id, artifact.path), result))
+    return list(map(lambda art: (art.id, art.path), result))
