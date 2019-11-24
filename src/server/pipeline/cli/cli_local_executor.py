@@ -63,7 +63,8 @@ class CliLocalExecutor(LocalExecutor):
             created_utc=end_timestamp,
             size_kb=os.path.getsize(out_path),
             path=out_path,
-            step_id=conf.step_id
+            step_id=conf.step_id,
+            simulation_id=conf.simulation_id
         )
         self.is_finished = True
         return

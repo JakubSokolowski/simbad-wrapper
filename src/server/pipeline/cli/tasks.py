@@ -53,7 +53,7 @@ def cli_step(self, artifact_id: int) -> int:
     :return: the id of created cli artifact
     """
     conf: Artifact = db_session.query(Artifact).get(artifact_id)
-    step = db_session.query(SimulationStep).get(conf.simulation_id)
+    step = db_session.query(SimulationStep).get(conf.step_id)
     step.celery_id = self.request.id
     db_session.begin()
     runtime_info: CliRuntimeInfo = CliRuntimeInfo(
@@ -81,6 +81,7 @@ def cli_step(self, artifact_id: int) -> int:
 
     db_session.begin()
     result: Artifact = executor.result
+    result.simulation_id = step.simulation_id
     step.finished_utc = datetime.datetime.utcnow()
     runtime_info.memory = 0
     runtime_info.cpu = 0

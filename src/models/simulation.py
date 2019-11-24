@@ -21,8 +21,8 @@ class Simulation(Base):
     id = Column(Integer, primary_key=True)
     started_utc = Column(DateTime)
     finished_utc = Column(DateTime)
-    current_step = Column(Enum(Step))
-    current_step_celery_id = Column(String())
+    current_step = Column(String())
+    current_step_id = Column(Integer)
     workdir = Column(String())
     name = Column(String(50), unique=False)
     steps = relationship("SimulationStep", backref="simulations")
@@ -37,13 +37,15 @@ class SimulationStep(Base):
     simulation_id = Column(Integer, ForeignKey('simulations.id'))
     started_utc = Column(DateTime)
     finished_utc = Column(DateTime)
-    origin = Column(Enum(Step))
+    origin = Column(String())
     celery_id = Column(String())
     cli_runtime_info = relationship("CliRuntimeInfo", uselist=False, backref="steps")
+    analyzer_runtime_info = relationship("AnalyzerRuntimeInfo", uselist=False, backref="steps")
     artifacts = relationship("Artifact", backref="steps")
 
     def __json__(self):
-        return ['id', 'simulation_id', 'started_utc', 'finished_utc', 'origin', 'artifacts', 'cli_runtime_info']
+        return ['id', 'simulation_id', 'started_utc', 'finished_utc', 'origin', 'artifacts', 'cli_runtime_info',
+                'analyzer_runtime_info']
 
 
 class Artifact(Base):
@@ -85,4 +87,3 @@ class AnalyzerRuntimeInfo(Base):
 
     def __json__(self):
         return ['progress']
-

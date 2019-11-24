@@ -38,10 +38,10 @@ def setup_workdir(request_data: dict) -> Artifact:
 
     start_time = datetime.datetime.utcnow()
 
-    simulation = Simulation(started_utc=start_time, name="test_simulation", current_step=Step.CONF)
+    simulation = Simulation(started_utc=start_time, name="test_simulation", current_step="CLI")
     db_session.add(simulation)
     db_session.flush()
-    step = SimulationStep(started_utc=start_time, origin=Step.CONF, simulation_id=simulation.id)
+    step = SimulationStep(started_utc=start_time, origin="CLI", simulation_id=simulation.id)
     db_session.add(step)
     db_session.flush()
 
@@ -49,12 +49,13 @@ def setup_workdir(request_data: dict) -> Artifact:
     conf_path = '{}/{}'.format(workdir_path, conf_name)
 
     simulation.workdir = workdir_path
+    simulation.current_step_id = step.id
 
     with open(conf_path, 'w+') as f:
         json.dump(conf, f, indent=2)
 
     configuration = Artifact(
-        size_kb=os.path.getsize(conf_path) << 10,
+        size_kb=os.path.getsize(conf_path),
         path=conf_path,
         created_utc=start_time,
         step_id=step.id,
