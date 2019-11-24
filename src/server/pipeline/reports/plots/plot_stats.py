@@ -22,7 +22,7 @@ plans = [
 ]
 
 
-def plot_stats(input_file, time_file, output_prefix):
+def plot_stats(input_file: str, time_file: str, output_path: str):
     time = pd.read_parquet(time_file)
     data = pd.read_parquet(input_file)
 
@@ -41,7 +41,7 @@ def plot_stats(input_file, time_file, output_prefix):
         plt.xlabel('time [in system]', fontsize='small')
         # plt.ylim(0,2)
         plt.legend()
-        out_file_name = output_prefix + '-'.join(columns) + '.png'
+        out_file_name = output_path + '-'.join(columns) + '.png'
         plt.savefig(out_file_name, bbox_inches='tight', dpi=150)
         plt.close(fig)
 

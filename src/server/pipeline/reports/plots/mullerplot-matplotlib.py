@@ -1,4 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3matplotlib==3.1.2
+numpy==1.17.4
+pandas==0.25.3
+pyarrow==0.15.1
 # -*- coding: utf-8 -*-
 
 """ Muller like plots with params values as color decoded...

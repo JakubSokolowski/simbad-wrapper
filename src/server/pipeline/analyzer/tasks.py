@@ -65,7 +65,7 @@ def get_analyzer_executor():
 
 
 @celery.task(bind=True, name='SIMBAD-ANALYZER')
-def analyzer_step(self, artifact_id: int) -> list:
+def analyzer_step(self, artifact_id: int) -> int:
     print('analyzer artifact id', artifact_id)
     cli_out: Artifact = db_session.query(Artifact).get(artifact_id)
     print('analyzer artifact id', cli_out.__dict__)
@@ -75,7 +75,6 @@ def analyzer_step(self, artifact_id: int) -> list:
     step: SimulationStep = SimulationStep(started_utc=start_time, origin="ANALYZER", simulation_id=simulation.id)
     db_session.flush()
     step.celery_id = self.request.id
-    simulation.steps.append(step)
     simulation.steps.append(step)
     simulation.current_step = "ANALYZER"
     simulation.current_step_id = step.id
@@ -117,4 +116,4 @@ def analyzer_step(self, artifact_id: int) -> list:
     db_session.add_all(result)
     db_session.commit()
 
-    return list(map(lambda art: (art.id, art.path), result))
+    return simulation.id

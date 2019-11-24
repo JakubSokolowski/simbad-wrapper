@@ -30,6 +30,8 @@ def compress_artifact(path: str) -> str:
         return "{}/{}".format(parent_dir, archive_name + '.zip')
     # TODO Quick and dirty method -> refactor to avoid code duplication
     else:
+        if path.endswith('.png'):
+            return path
         parent_dir: str = os.path.dirname(path)
         archive_name: str = path_leaf(path)
         archive_path = "{}/{}".format(parent_dir, archive_name)

@@ -8,6 +8,7 @@ from server.pipeline.simulation.api import simulation_api
 from server.pipeline.simulation import tasks as simulation_tasks
 from server.pipeline.cli import tasks as simbad_cli_task
 from server.pipeline.analyzer import tasks as simbad_analyzer_task
+from server.pipeline.reports import tasks as simbad_reports_task
 from server.pipeline.simulation.tasks import celery
 
 from database import init_db, init_engine
@@ -40,6 +41,7 @@ def entrypoint(debug=False, mode='app'):
     configure_celery(app, simulation_tasks.celery)
     configure_celery(app, simbad_cli_task.celery)
     configure_celery(app, simbad_analyzer_task.celery)
+    configure_celery(app, simbad_reports_task.celery)
 
     # register blueprints
     app.register_blueprint(simulation_api, url_prefix='/api/simulation')
