@@ -5,6 +5,7 @@ from flask import Flask
 from server.artifacts.api import artifact_api
 from server.encoder import AlchemyEncoder
 from server.pipeline.simulation.api import simulation_api
+from server.pipeline.reports.api import reports_api
 from server.pipeline.simulation import tasks as simulation_tasks
 from server.pipeline.cli import tasks as simbad_cli_task
 from server.pipeline.analyzer import tasks as simbad_analyzer_task
@@ -46,6 +47,7 @@ def entrypoint(debug=False, mode='app'):
     # register blueprints
     app.register_blueprint(simulation_api, url_prefix='/api/simulation')
     app.register_blueprint(artifact_api, url_prefix='/api/artifact')
+    app.register_blueprint(reports_api, url_prefix='/api/reports')
 
     if mode == 'app':
         return app

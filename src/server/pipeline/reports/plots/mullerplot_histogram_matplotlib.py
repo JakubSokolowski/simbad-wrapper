@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib import colors
+from matplotlib.colorbar import Colorbar
 
 
 def build_colors_list(data, cmap):
@@ -69,7 +70,7 @@ def histogram_plots(input_csv_file, param_name, time_parquet, stats_parquet, out
                                norm=plt.Normalize(vmin=dataNorm.min(),
                                                   vmax=dataNorm.max()))
     sm._A = []
-    colorbar = plt.colorbar(sm)
+    colorbar: Colorbar = plt.colorbar(sm)
     colorbar.set_label(param_name, size='xx-large')
 
     plt.savefig(output_file, bbox_inches='tight', dpi=150)
