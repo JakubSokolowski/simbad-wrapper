@@ -12,11 +12,11 @@ logger = logging.getLogger()
 celery = Celery(__name__, autofinalize=False)
 
 
-@celery.task(bind=True, trail=True, name='Simulation')
-def run_simulation(self, artifact_id) -> AsyncResult:
+@celery.task(name='Simulation')
+def run_simulation(artifact_id) -> AsyncResult:
     """
 
-    :param self:
+
     :param artifact_id:
     :return:
     """

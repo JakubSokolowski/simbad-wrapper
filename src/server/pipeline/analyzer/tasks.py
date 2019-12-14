@@ -39,8 +39,8 @@ def get_analyzer_ssh_executor() -> AnalyzerSshExecutor:
         (settings.SIMBAD_ANALYZER_HOST, 22),
         ssh_username=settings.SIMBAD_ANALYZER_USER,
         ssh_password=settings.SIMBAD_ANALYZER_PASSWORD,
-        local_bind_address=('127.0.0.1', int(settings.SIMBAD_ANALYZER_LOCAL_PORT)),
-        remote_bind_address=('127.0.0.1', int(settings.SIMBAD_ANALYZER_LOCAL_PORT))
+        local_bind_address=('127.0.0.1', int(settings.SIMBAD_ANALYZER_PORT)),
+        remote_bind_address=('127.0.0.1', int(settings.SIMBAD_ANALYZER_PORT))
 
     )
 

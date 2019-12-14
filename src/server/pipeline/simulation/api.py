@@ -10,7 +10,7 @@ simulation_api = Blueprint('simulation_api', __name__)
 
 
 @simulation_api.route('/start', methods=['POST'])
-def run():
+def start():
     request_data: dict = request_to_json(request)
     conf: Artifact = setup_workdir(request_data)
     db_session.begin()
