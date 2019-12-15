@@ -4,4 +4,12 @@ flask-sqlalchemy
 sqlalchemy
 gunicorn
 redis
+python-igraph
+numpy
+pyarrow
+matplotlib
+pandas
+fire
+sshtunnel
+psutil
 

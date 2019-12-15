@@ -28,6 +28,9 @@ class Simulation(Base):
     steps = relationship("SimulationStep", backref="simulations")
     artifacts = relationship("Artifact", backref="simulations")
 
+    def __json__(self):
+        return ['id', 'started_utc', 'finished_utc', 'current_step', 'current_step_id', 'steps']
+
 
 class SimulationStep(Base):
     __tablename__ = 'steps'
