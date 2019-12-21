@@ -60,12 +60,13 @@ class Artifact(Base):
     created_utc = Column(DateTime)
     size_kb = Column(Integer)
     path = Column(String())
+    file_type = Column(String())
 
     def get_workdir(self):
         return os.path.dirname(os.path.abspath(self.path)) if self.path is not None else None
 
     def __json__(self):
-        return ['id', 'created_utc', 'size_kb', 'path']
+        return ['id', 'created_utc', 'size_kb', 'path', 'file_type']
 
 
 class CliRuntimeInfo(Base):
@@ -82,6 +83,18 @@ class CliRuntimeInfo(Base):
 
 class AnalyzerRuntimeInfo(Base):
     __tablename__ = 'analyzer_runtime_infos'
+
+    id = Column(Integer, primary_key=True)
+    step_id = Column(Integer, ForeignKey('steps.id'))
+    is_finished = Column(Boolean)
+    progress = Column(Float)
+
+    def __json__(self):
+        return ['progress']
+
+
+class ReportsRuntimeInfo(Base):
+    __tablename__ = 'reports_runtime_infos'
 
     id = Column(Integer, primary_key=True)
     step_id = Column(Integer, ForeignKey('steps.id'))
