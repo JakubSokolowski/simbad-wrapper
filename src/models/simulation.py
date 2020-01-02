@@ -76,9 +76,10 @@ class CliRuntimeInfo(Base):
     step_id = Column(Integer, ForeignKey('steps.id'))
     cpu = Column(Integer)
     memory = Column(Integer)
+    progress = Column(Float)
 
     def __json__(self):
-        return ['cpu', 'memory']
+        return ['cpu', 'memory', 'progress']
 
 
 class AnalyzerRuntimeInfo(Base):
