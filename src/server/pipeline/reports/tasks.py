@@ -8,6 +8,7 @@ from celery import Celery, chain, chord
 
 from database import db_session
 from models.simulation import Artifact, SimulationStep, Simulation
+from server.pipeline.reports.model.las import stream_to_las, las_to_entwine
 from server.pipeline.reports.pdf.simulation_report import build_summary_report, SUMMARY_REPORT_NAME
 from server.pipeline.reports.plots.mullerplot_histogram_matplotlib import histogram_plots
 from server.pipeline.reports.plots.mullerplot_matplotlib import muller_plots
@@ -95,9 +96,9 @@ def reports_step(self, simulation_id: int) -> None:
         major_clones_plot_stats.s(),
         major_clones_mullerplot.s(),
         mullerplot.s(),
-        mutation_tree.s(),
         mutation_histogram.s(),
         simulation_report.s(),
+        build_cell_model.s(),
         save_result.s(simulation_id, step.id, workdir)
     ).apply_async()
     return result
@@ -211,6 +212,7 @@ def major_clones_mullerplot_histogram(self, workdir: str, param_name: str):
     stats_parquet = "{}/output_data/major_stats_scalars.parquet".format(workdir)
     output_file = "{}/plots/major-histogram-{}".format(workdir, param_name)
     histogram_plots(input_csv_file, param_name, time_parquet, stats_parquet, output_file)
+    return output_file
 
 
 @celery.task(bind=True, name='MULLERPLOT')
@@ -244,6 +246,18 @@ def simulation_report(self, workdir: str):
     return workdir
 
 
+@celery.task(bind=True, name='CELL-MODEL')
+def build_cell_model(self, workdir: str):
+    stream_in: str = join(workdir, 'cli_out.csv')
+    las_out: str = join(workdir, 'cell_model.las')
+    potree_out: str = join(workdir, 'model')
+    if not os.path.exists(potree_out):
+        os.mkdir(potree_out)
+    stream_to_las(stream_in, 'birth.efficiency', las_out)
+    las_to_entwine(las_out, potree_out)
+    return workdir
+
+
 @celery.task(bind=True, name='MUTATION-TREE')
 def mutation_tree(self, workdir: str):
     data_path = "{}/output_data/large_final_mutations.parquet".format(workdir)
@@ -256,7 +270,7 @@ def mutation_tree(self, workdir: str):
 def save_result(plots, simulation_id: int, step_id: int, workdir: str):
     output_path: str = workdir + "/plots/"
     plots: List[Artifact] = index_plots(output_path, simulation_id, step_id)
-    reports: List[Artifact] = index_reports(workdir +"/reports/", simulation_id, step_id)
+    reports: List[Artifact] = index_reports(workdir + "/reports/", simulation_id, step_id)
 
     simulation: Simulation = db_session.query(Simulation).get(simulation_id)
     step: SimulationStep = db_session.query(SimulationStep).get(step_id)
@@ -274,4 +288,6 @@ def save_result(plots, simulation_id: int, step_id: int, workdir: str):
 
 @celery.task
 def chordfinisher(*args, **kwargs):
+    print(args)
+    print(kwargs)
     return "OK"

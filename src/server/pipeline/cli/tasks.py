@@ -76,6 +76,7 @@ def cli_step(self, artifact_id: int) -> int:
         db_session.begin()
         runtime_info.cpu = executor.status.cpu
         runtime_info.memory = executor.status.memory
+        runtime_info.progress = executor.status.progress
         db_session.commit()
         sleep(POLLING_PERIOD)
 
@@ -85,6 +86,7 @@ def cli_step(self, artifact_id: int) -> int:
     step.finished_utc = datetime.datetime.utcnow()
     runtime_info.memory = 0
     runtime_info.cpu = 0
+    runtime_info.progress = 100
     db_session.add(result)
     db_session.commit()
 
