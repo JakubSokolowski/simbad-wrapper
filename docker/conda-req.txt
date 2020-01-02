@@ -12,4 +12,6 @@ pandas
 fire
 sshtunnel
 psutil
+entwine
+laspy
 

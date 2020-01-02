@@ -1,3 +1,2 @@
-FROM jsokolowski/pipeline-base:1.0
-RUN pip install redis reportlab
+FROM jsokolowski/pipeline-base:latest
 COPY ./src /usr/simbad-server/app
