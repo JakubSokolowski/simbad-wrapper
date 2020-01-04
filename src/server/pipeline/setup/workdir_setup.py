@@ -13,14 +13,13 @@ def get_conf_name(name: str) -> str:
     return name + '.json'
 
 
-def create_workdir(conf_name: str, simulation_id: int) -> str:
+def create_workdir(simulation_id: int) -> str:
     """
     Creates new dir for simulation in SIMBAD_DATA_PATH
-    :param conf_name:
     :param simulation_id:
     :return: path to created workdir
     """
-    work_dir_path = SIMBAD_DATA_PATH + '/SIM_{}_CONF_{}'.format(simulation_id, conf_name)
+    work_dir_path = SIMBAD_DATA_PATH + '/SIM_{}'.format(simulation_id)
     if not os.path.exists(work_dir_path):
         os.mkdir(work_dir_path)
 
@@ -45,7 +44,7 @@ def setup_workdir(request_data: dict) -> Artifact:
     db_session.add(step)
     db_session.flush()
 
-    workdir_path = create_workdir(conf_name, simulation.id)
+    workdir_path = create_workdir(simulation.id)
     conf_path = '{}/{}'.format(workdir_path, conf_name)
 
     simulation.workdir = workdir_path
