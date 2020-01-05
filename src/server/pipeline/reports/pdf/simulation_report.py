@@ -9,7 +9,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 
-from models.simulation import Artifact
+from models.artifact import Artifact
 
 IMAGE_WIDTH_CM = 13 * cm
 LABEL_FONT_SIZE = 10

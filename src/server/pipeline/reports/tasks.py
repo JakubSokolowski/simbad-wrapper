@@ -7,7 +7,9 @@ from typing import List
 from celery import Celery, chain, chord
 
 from database import db_session
-from models.simulation import Artifact, SimulationStep, Simulation
+from models.artifact import Artifact
+from models.simulation import Simulation
+from models.simulation_step import SimulationStep
 from server.pipeline.reports.model.las import stream_to_las, las_to_entwine
 from server.pipeline.reports.pdf.simulation_report import build_summary_report, SUMMARY_REPORT_NAME
 from server.pipeline.reports.plots.mullerplot_histogram_matplotlib import histogram_plots
@@ -36,6 +38,7 @@ def index_plots(out_dir: str, simulation_id: int, step_id: int) -> List[Artifact
             plot_artifacts.append(
                 Artifact(
                     path=plot_path,
+                    name=plot_name,
                     size_kb=os.path.getsize(plot_path),
                     simulation_id=simulation_id,
                     step_id=step_id,
@@ -55,6 +58,7 @@ def index_reports(out_dir: str, simulation_id: int, step_id: int) -> List[Artifa
             report_artifacts.append(
                 Artifact(
                     path=path,
+                    name=report,
                     size_kb=os.path.getsize(path),
                     simulation_id=simulation_id,
                     step_id=step_id,
@@ -72,7 +76,8 @@ def reports_step(self, simulation_id: int) -> None:
     start_time = datetime.datetime.utcnow()
 
     simulation: Simulation = db_session.query(Simulation).get(simulation_id)
-    step: SimulationStep = SimulationStep(started_utc=start_time, origin="REPORT", simulation_id=simulation.id)
+    step: SimulationStep = SimulationStep(started_utc=start_time, origin="REPORT", simulation_id=simulation.id,
+                                          status='ONGOING')
     db_session.flush()
 
     workdir: str = simulation.workdir
@@ -280,6 +285,7 @@ def save_result(plots, simulation_id: int, step_id: int, workdir: str):
     end_time = datetime.datetime.utcnow()
     simulation.finished_utc = end_time
     step.finished_utc = end_time
+    step.status = 'SUCCESS'
     db_session.add_all(plots)
     db_session.add_all(reports)
     db_session.add_all([simulation, step])

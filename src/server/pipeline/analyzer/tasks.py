@@ -10,7 +10,11 @@ from sshtunnel import SSHTunnelForwarder
 
 import config.settings as settings
 from database import db_session
-from models.simulation import Artifact, SimulationStep, AnalyzerRuntimeInfo, Simulation, Step
+from models.analyzer_runtime_info import AnalyzerRuntimeInfo
+from models.artifact import Artifact
+from models.simulation import Simulation
+from models.simulation_step import SimulationStep
+from server.artifacts.utils import path_leaf, file_extension
 from server.executors import BaseExecutor
 from server.pipeline.analyzer.analyzer_http_executor import AnalyzerHttpExecutor
 from server.pipeline.analyzer.analyzer_ssh_executor import AnalyzerSshExecutor
@@ -72,7 +76,8 @@ def analyzer_step(self, artifact_id: int) -> int:
 
     simulation: Simulation = db_session.query(Simulation).get(cli_out.simulation_id)
     start_time = datetime.datetime.utcnow()
-    step: SimulationStep = SimulationStep(started_utc=start_time, origin="ANALYZER", simulation_id=simulation.id)
+    step: SimulationStep = SimulationStep(started_utc=start_time, origin="ANALYZER", simulation_id=simulation.id,
+                                          status='ONGOING')
     db_session.flush()
     step.celery_id = self.request.id
     simulation.steps.append(step)
@@ -108,10 +113,14 @@ def analyzer_step(self, artifact_id: int) -> int:
 
     for artifact in result:
         artifact.step_id = step.id
+        artifact.name = path_leaf(artifact.path)
+        artifact.file_type = file_extension(artifact.path)
+        artifact.created_utc = datetime.datetime.fromtimestamp(os.path.getmtime(artifact.path))
         artifact.simulation_id = step.simulation_id
         artifact.size_kb = os.path.getsize(artifact.path)
 
     step.finished_utc = datetime.datetime.utcnow()
+    step.status = 'SUCCESS'
     runtime_info.progress = 100
     db_session.add_all(result)
     db_session.commit()

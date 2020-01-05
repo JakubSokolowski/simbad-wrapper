@@ -1,7 +1,9 @@
 from flask import Blueprint, jsonify, request
 
 from database import db_session
-from models.simulation import Simulation, SimulationStep, Artifact
+from models.simulation import Simulation
+from models.simulation_step import SimulationStep
+from models.artifact import Artifact
 from server.pipeline.setup.workdir_setup import setup_workdir
 from server.pipeline.util.request import request_to_json
 from .tasks import run_simulation

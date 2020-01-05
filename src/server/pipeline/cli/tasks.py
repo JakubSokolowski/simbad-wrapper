@@ -7,7 +7,9 @@ from time import sleep
 
 from config.settings import SIMBAD_CLI_BINARY_PATH, SIMBAD_CLI_EXECUTOR, POLLING_PERIOD
 from database import db_session
-from models.simulation import Artifact, SimulationStep, CliRuntimeInfo
+from models.simulation_step import SimulationStep
+from models.cli_runtime_info import CliRuntimeInfo
+from models.artifact import Artifact
 from server.executors import BaseExecutor
 from server.pipeline.cli.cli_local_executor import CliLocalExecutor
 
@@ -53,8 +55,9 @@ def cli_step(self, artifact_id: int) -> int:
     :return: the id of created cli artifact
     """
     conf: Artifact = db_session.query(Artifact).get(artifact_id)
-    step = db_session.query(SimulationStep).get(conf.step_id)
+    step: SimulationStep = db_session.query(SimulationStep).get(conf.step_id)
     step.celery_id = self.request.id
+    step.status = 'ONGOING'
     db_session.begin()
     runtime_info: CliRuntimeInfo = CliRuntimeInfo(
         memory=0,
@@ -84,6 +87,7 @@ def cli_step(self, artifact_id: int) -> int:
     result: Artifact = executor.result
     result.simulation_id = step.simulation_id
     step.finished_utc = datetime.datetime.utcnow()
+    step.status = 'SUCCESS'
     runtime_info.memory = 0
     runtime_info.cpu = 0
     runtime_info.progress = 100

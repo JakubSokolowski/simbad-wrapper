@@ -5,7 +5,8 @@ import threading
 
 import psutil
 
-from models.simulation import Artifact, CliRuntimeInfo
+from models.artifact import Artifact
+from models.cli_runtime_info import CliRuntimeInfo
 from server.executors.local_executor import LocalExecutor
 
 
@@ -100,8 +101,10 @@ class CliLocalExecutor(LocalExecutor):
             created_utc=end_timestamp,
             size_kb=os.path.getsize(out_path),
             path=out_path,
+            name='cli_out',
             step_id=conf.step_id,
-            simulation_id=conf.simulation_id
+            simulation_id=conf.simulation_id,
+            file_type='CSV'
         )
         self.is_finished = True
         return

@@ -3,7 +3,7 @@ import logging
 from flask import Blueprint, send_file, jsonify, make_response
 
 from database import db_session
-from models.simulation import Artifact
+from models.artifact import Artifact
 
 artifact_api = Blueprint('artifact', __name__)
 logger = logging.getLogger()

@@ -1,6 +1,6 @@
 from sshtunnel import SSHTunnelForwarder
 
-from models.simulation import Artifact
+from models.artifact import Artifact
 from server.pipeline.analyzer.analyzer_http_executor import AnalyzerHttpExecutor
 
 SIMBAD_ANALYZER_POLLING_PERIOD = 60

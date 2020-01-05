@@ -4,7 +4,9 @@ import os
 
 from config.settings import SIMBAD_DATA_PATH
 from database import db_session
-from models.simulation import Simulation, Step, Artifact, SimulationStep
+from models.artifact import Artifact
+from models.simulation import Simulation
+from models.simulation_step import SimulationStep
 
 
 def get_conf_name(name: str) -> str:
@@ -40,7 +42,7 @@ def setup_workdir(request_data: dict) -> Artifact:
     simulation = Simulation(started_utc=start_time, name="test_simulation", current_step="CLI")
     db_session.add(simulation)
     db_session.flush()
-    step = SimulationStep(started_utc=start_time, origin="CLI", simulation_id=simulation.id)
+    step = SimulationStep(started_utc=start_time, origin="CLI", simulation_id=simulation.id, status='ONGOING')
     db_session.add(step)
     db_session.flush()
 
@@ -58,6 +60,8 @@ def setup_workdir(request_data: dict) -> Artifact:
         path=conf_path,
         created_utc=start_time,
         step_id=step.id,
+        name=conf_name,
+        file_type='JSON',
         simulation_id=simulation.id
     )
     simulation.artifacts.append(configuration)

@@ -4,7 +4,8 @@ from time import sleep
 
 import requests
 
-from models.simulation import Artifact, AnalyzerRuntimeInfo
+from models.analyzer_runtime_info import AnalyzerRuntimeInfo
+from models.artifact import Artifact
 from server.executors.http_executor import HttpExecutor
 
 SIMBAD_ANALYZER_POLLING_PERIOD = 3

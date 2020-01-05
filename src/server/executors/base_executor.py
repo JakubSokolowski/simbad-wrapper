@@ -1,6 +1,6 @@
 from typing import List, Union
 
-from models.simulation import Artifact
+from models.artifact import Artifact
 
 
 class BaseExecutor:
