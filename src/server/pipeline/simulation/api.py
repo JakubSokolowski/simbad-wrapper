@@ -56,7 +56,7 @@ def simulation_status(simulation_id):
     simulation = db_session.query(Simulation).get(simulation_id)
     if simulation is not None:
         return jsonify(simulation)
-    return 404
+    return "Simulation not found"
 
 
 @simulation_api.route('/step/<step_id>')
@@ -64,4 +64,4 @@ def step_status(step_id):
     step = db_session.query(SimulationStep).get(step_id)
     if step is not None:
         return jsonify(step)
-    return 404
+    return "Simulation step not found"

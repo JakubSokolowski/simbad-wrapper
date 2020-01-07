@@ -78,9 +78,9 @@ def analyzer_step(self, artifact_id: int) -> int:
     start_time = datetime.datetime.utcnow()
     step: SimulationStep = SimulationStep(started_utc=start_time, origin="ANALYZER", simulation_id=simulation.id,
                                           status='ONGOING')
+    db_session.add(step)
     db_session.flush()
     step.celery_id = self.request.id
-    simulation.steps.append(step)
     simulation.current_step = "ANALYZER"
     simulation.current_step_id = step.id
 

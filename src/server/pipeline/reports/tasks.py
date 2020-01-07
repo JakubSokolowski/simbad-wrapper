@@ -78,6 +78,7 @@ def reports_step(self, simulation_id: int) -> None:
     simulation: Simulation = db_session.query(Simulation).get(simulation_id)
     step: SimulationStep = SimulationStep(started_utc=start_time, origin="REPORT", simulation_id=simulation.id,
                                           status='ONGOING')
+    db_session.add(step)
     db_session.flush()
 
     workdir: str = simulation.workdir
@@ -87,7 +88,7 @@ def reports_step(self, simulation_id: int) -> None:
         os.makedirs(output_path)
 
     simulation.current_step = "REPORT"
-    simulation.current_step = step.id
+    simulation.current_step_id = step.id
 
     db_session.begin()
     db_session.add_all([simulation, step])
@@ -97,7 +98,6 @@ def reports_step(self, simulation_id: int) -> None:
         all_clones_plot_stats.s(workdir),
         all_clones_mullerplot.s(),
         noise_plot_stats.s(),
-        noise_mullerplot.s(),
         major_clones_plot_stats.s(),
         major_clones_mullerplot.s(),
         mullerplot.s(),

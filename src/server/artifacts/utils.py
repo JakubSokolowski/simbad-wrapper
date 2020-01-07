@@ -15,6 +15,11 @@ def path_leaf(path: str) -> str:
     return tail or ntpath.basename(head)
 
 
+def file_extension(path: str) -> str:
+    name, extension = os.path.splitext(path)
+    return extension.upper()
+
+
 def compress_artifact(path: str) -> str:
     """
     Compresses artifact (or folder in case of .parquet artifacts) to zip format
@@ -37,5 +42,3 @@ def compress_artifact(path: str) -> str:
         archive_path = "{}/{}".format(parent_dir, archive_name)
         shutil.make_archive(archive_path, 'zip', parent_dir, path_leaf(path))
         return "{}/{}".format(parent_dir, archive_name + '.zip')
-
-

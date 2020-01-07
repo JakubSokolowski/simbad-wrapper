@@ -42,7 +42,7 @@ def stream_to_las(stream_path: str, parameter_name: str, out_path: str) -> None:
         z_min = np.floor(np.min(z))
 
         outfile.header.offset = [x_min, y_min, z_min]
-        outfile.header.scale = [0.1, 0.1, 0.1]
+        outfile.header.scale = [0.00001, 0.00001, 0.00001]
 
         outfile.x = x
         outfile.y = y
