@@ -1,6 +1,7 @@
 import datetime
 import os
 import subprocess
+import sys
 import threading
 
 import psutil
@@ -34,9 +35,16 @@ class CliLocalExecutor(LocalExecutor):
         return
 
     def update_progress(self, process: subprocess.Popen):
+        log = ''
         for line in iter(lambda: process.stderr.readline(), b''):
-            curr, target = line.decode('utf8').split('/')
-            self.status.progress = int(float(int(curr) / int(target)) * 100.0)
+            log += line.decode('utf8')
+            try:
+                curr, target = line.decode('utf8').split('/')
+                self.status.progress = int(float(int(curr) / int(target)) * 100.0)
+            except ValueError:
+                print('Error in simulator: \n {}'.format(log))
+                raise
+        return
 
     def update_runtime(self, out_path: str, process: subprocess.Popen):
         counter = 0
@@ -48,7 +56,7 @@ class CliLocalExecutor(LocalExecutor):
                 if counter % 1000000 == 0:
                     # Not sure if that byte conversion is right,
                     # almost sure that it is not
-                    memory = process_info.memory_info().rss / 1000000
+                    memory = process_info.memory_info().rss
                     cpu = process_info.cpu_percent()
                     self.status.memory = memory
                     self.status.cpu = cpu
@@ -83,18 +91,6 @@ class CliLocalExecutor(LocalExecutor):
             runtime.start()
             progress.join()
             runtime.join()
-
-            for c in iter(lambda: process.stdout.read(1), b''):
-                counter += 1
-
-                if counter % 1000000 == 0:
-                    memory = process_info.memory_info().rss / 1000000
-                    cpu = process_info.cpu_percent()
-                    self.status.memory = memory
-                    self.status.cpu = cpu
-
-                line = c.decode('utf-8')
-                f.write(line)
 
         end_timestamp = datetime.datetime.utcnow()
         self.result = Artifact(

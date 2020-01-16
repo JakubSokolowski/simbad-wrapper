@@ -4,3 +4,4 @@ bin/
 .idea/
 redis-stable/
 __pycache__/
+.pytest_cache/

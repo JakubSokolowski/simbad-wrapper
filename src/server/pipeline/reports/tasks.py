@@ -10,7 +10,7 @@ from database import db_session
 from models.artifact import Artifact
 from models.simulation import Simulation
 from models.simulation_step import SimulationStep
-from server.pipeline.reports.model.las import stream_to_las, las_to_entwine
+from server.pipeline.reports.model.las import stream_to_las, las_to_entwine, build_models
 from server.pipeline.reports.pdf.simulation_report import build_summary_report, SUMMARY_REPORT_NAME
 from server.pipeline.reports.plots.mullerplot_histogram_matplotlib import histogram_plots
 from server.pipeline.reports.plots.mullerplot_matplotlib import muller_plots
@@ -253,13 +253,7 @@ def simulation_report(self, workdir: str):
 
 @celery.task(bind=True, name='CELL-MODEL')
 def build_cell_model(self, workdir: str):
-    stream_in: str = join(workdir, 'cli_out.csv')
-    las_out: str = join(workdir, 'cell_model.las')
-    potree_out: str = join(workdir, 'model')
-    if not os.path.exists(potree_out):
-        os.mkdir(potree_out)
-    stream_to_las(stream_in, 'birth.efficiency', las_out)
-    las_to_entwine(las_out, potree_out)
+    build_models(workdir)
     return workdir
 
 
