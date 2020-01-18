@@ -4,4 +4,4 @@ WORKDIR /usr/simbad-server/app
 COPY ./docker/conda-req.txt /usr/simbad-server/app
 RUN conda install -c conda-forge --file /usr/simbad-server/app/conda-req.txt
 RUN pip install redis reportlab
-COPY --from=jsokolowski/simbad-cli:gcc /code/build/cli/SimBaD-cli /simbad-cli
+COPY --from=simbadbot/simbad /SimBaD/SimBaD-cli /simbad-cli
