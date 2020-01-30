@@ -17,7 +17,7 @@ def path_leaf(path: str) -> str:
 
 def file_extension(path: str) -> str:
     name, extension = os.path.splitext(path)
-    return extension.upper()
+    return extension[1:].upper()
 
 
 def compress_artifact(path: str) -> str:

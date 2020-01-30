@@ -36,10 +36,10 @@ class CliLocalExecutor(LocalExecutor):
         return
 
     def update_progress(self, workdir, process: subprocess.Popen):
-        # simulator_log = open(workdir + '/logs/simulator.log', "a")
+        simulator_log = open(workdir + '/logs/simulator.log', "a")
         process_info = psutil.Process(process.pid)
         for line in iter(lambda: process.stderr.readline(), b''):
-            # simulator_log.write(line.decode('utf-8'))
+            simulator_log.write(line.decode('utf-8'))
             try:
                 curr, target = line.decode('utf8').split('/')
 
@@ -52,9 +52,9 @@ class CliLocalExecutor(LocalExecutor):
             except ValueError:
                 print('Error in simulator: \n {}'.format(line))
                 self.status.error = 'Unexpected stderr output in simulator'
-                # simulator_log.close()
+                simulator_log.close()
                 return
-        # simulator_log.close()
+        simulator_log.close()
         return
 
     def run_cli(self, conf: Artifact) -> None:
@@ -90,14 +90,14 @@ class CliLocalExecutor(LocalExecutor):
         )
         log_path = workdir + '/logs/simulator.log'
 
-        # self.log = Artifact(
-        #     created_utc=end_timestamp,
-        #     size_kb=os.path.getsize(log_path),
-        #     path=log_path,
-        #     name='simulator.log',
-        #     step_id=conf.step_id,
-        #     simulation_id=conf.simulation_id,
-        #     file_type='LOG'
-        # )
+        self.log = Artifact(
+            created_utc=end_timestamp,
+            size_kb=os.path.getsize(log_path),
+            path=log_path,
+            name='simulator.log',
+            step_id=conf.step_id,
+            simulation_id=conf.simulation_id,
+            file_type='LOG'
+        )
         self.is_finished = True
         return

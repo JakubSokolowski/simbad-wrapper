@@ -21,9 +21,12 @@ def create_workdir(simulation_id: int) -> str:
     :param simulation_id:
     :return: path to created workdir
     """
-    work_dir_path = SIMBAD_DATA_PATH + '/SIM_{}'.format(simulation_id)
+    work_dir_path = os.path.join(SIMBAD_DATA_PATH, 'SIM_{}'.format(simulation_id))
+    logs_path = os.path.join(work_dir_path, 'logs')
     if not os.path.exists(work_dir_path):
         os.mkdir(work_dir_path)
+    if not os.path.exists(logs_path):
+        os.mkdir(logs_path)
 
     return work_dir_path
 

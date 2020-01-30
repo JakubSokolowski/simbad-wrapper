@@ -12,7 +12,7 @@ logger = logging.getLogger()
 celery = Celery(__name__, autofinalize=False)
 
 
-@celery.task(name='Simulation')
+@celery.task(name='SIMULATION-PIPELINE')
 def run_simulation(artifact_id) -> AsyncResult:
     """
 
