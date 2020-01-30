@@ -5,7 +5,7 @@ import os
 from time import sleep
 from typing import List
 
-from celery import Celery
+from celery import Celery, shared_task
 from sshtunnel import SSHTunnelForwarder
 
 import config.settings as settings
@@ -18,6 +18,8 @@ from server.artifacts.utils import path_leaf, file_extension
 from server.executors import BaseExecutor
 from server.pipeline.analyzer.analyzer_http_executor import AnalyzerHttpExecutor
 from server.pipeline.analyzer.analyzer_ssh_executor import AnalyzerSshExecutor
+from server.pipeline.util import revoke_chain_authority
+from server.pipeline.util.revoke_chain_authority import RevokeChainRequested
 
 logger = logging.getLogger()
 celery = Celery(__name__, autofinalize=False)
@@ -99,16 +101,20 @@ def analyzer_step(self, artifact_id: int) -> int:
     db_session.commit()
 
     executor: BaseExecutor = get_analyzer_executor()
+    print('Starting executor')
     executor.execute(cli_out)
+    print('Starting polling..')
 
     while executor.is_finished is not True:
         db_session.begin()
+        print('status', executor.status.__dict__)
         runtime_info.progress = executor.status.progress
+        runtime_info.error = executor.status.error
         db_session.commit()
         sleep(settings.SIMBAD_ANALYZER_POLLING_PERIOD)
 
     db_session.begin()
-    print(executor.result)
+
     result: List[Artifact] = list(map(lambda path: Artifact(path=path), executor.result))
 
     for artifact in result:
@@ -118,6 +124,17 @@ def analyzer_step(self, artifact_id: int) -> int:
         artifact.created_utc = datetime.datetime.fromtimestamp(os.path.getmtime(artifact.path))
         artifact.simulation_id = step.simulation_id
         artifact.size_kb = os.path.getsize(artifact.path)
+
+    if executor.status.error is not None:
+        print('Executor: ', executor.status.__dict__)
+        print('Result', result)
+        step.status = 'FAILURE'
+        step.finished_utc = datetime.datetime.utcnow()
+        runtime_info.error = executor.status.error
+        db_session.add_all(result)
+        db_session.commit()
+        sleep(settings.SIMBAD_ANALYZER_POLLING_PERIOD)
+        raise RevokeChainRequested('Analyzer step failed')
 
     step.finished_utc = datetime.datetime.utcnow()
     step.status = 'SUCCESS'

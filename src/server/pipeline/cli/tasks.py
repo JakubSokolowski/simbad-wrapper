@@ -97,7 +97,7 @@ def cli_step(self, artifact_id: int) -> int:
     runtime_info.memory = 0
     runtime_info.cpu = 0
     runtime_info.progress = 100
-    db_session.add_all([result])
+    db_session.add_all([result, log])
     db_session.commit()
 
     return result.id

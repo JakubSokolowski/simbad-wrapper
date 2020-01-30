@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, Float
+from sqlalchemy import Column, Integer, ForeignKey, Float, String
 
 from database import Base
 
@@ -11,6 +11,7 @@ class CliRuntimeInfo(Base):
     cpu = Column(Integer)
     memory = Column(Integer)
     progress = Column(Float)
+    error = Column(String)
 
     def __json__(self):
-        return ['cpu', 'memory', 'progress']
+        return ['cpu', 'memory', 'progress', 'error']

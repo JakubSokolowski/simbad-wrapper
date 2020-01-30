@@ -34,7 +34,6 @@ class AnalyzerHttpExecutor(HttpExecutor):
         response_status_code = requests.post(self.start_endpoint, data=data).status_code
 
         if response_status_code == 202:
-            print(response_status_code)
             # start request was accepted, start polling for status changes
             thread = threading.Thread(target=self.update_runtime_info)
             thread.daemon = True
@@ -60,8 +59,12 @@ class AnalyzerHttpExecutor(HttpExecutor):
         """
         while self.is_finished is not True:
             response = requests.get(self.runtime_endpoint).json()
-            self.status = AnalyzerRuntimeInfo(is_finished=response['finished'], progress=response["progress"])
-            if self.status.is_finished:
+            self.status = AnalyzerRuntimeInfo(
+                is_finished=response['finished'],
+                progress=response["progress"],
+                error=response["error"]
+            )
+            if self.status.is_finished or self.status.error is not None:
                 # Stop polling, do not set set status to finished yet
                 # Setting self.is_finished to true here might cause NoneType result
                 # because task my ask for result as soon as sees this flag, but the result
