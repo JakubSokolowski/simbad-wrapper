@@ -1,5 +1,4 @@
 import logging
-import time
 
 from celery import Celery, chain
 from celery.result import AsyncResult

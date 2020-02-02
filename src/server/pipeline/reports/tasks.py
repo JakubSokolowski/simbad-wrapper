@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import shutil
 from os.path import join, isfile
 from typing import List
 
@@ -10,7 +11,7 @@ from database import db_session
 from models.artifact import Artifact
 from models.simulation import Simulation
 from models.simulation_step import SimulationStep
-from server.pipeline.reports.model.las import stream_to_las, las_to_entwine, build_models
+from server.pipeline.reports.model.las import build_models
 from server.pipeline.reports.pdf.simulation_report import build_summary_report, SUMMARY_REPORT_NAME
 from server.pipeline.reports.plots.mullerplot_histogram_matplotlib import histogram_plots
 from server.pipeline.reports.plots.mullerplot_matplotlib import muller_plots
@@ -72,7 +73,6 @@ def index_reports(out_dir: str, simulation_id: int, step_id: int) -> List[Artifa
 
 @celery.task(bind=True, name='SIMBAD-PLOTS-MAIN')
 def reports_step(self, simulation_id: int) -> None:
-    print("Run")
     start_time = datetime.datetime.utcnow()
 
     simulation: Simulation = db_session.query(Simulation).get(simulation_id)
@@ -104,7 +104,7 @@ def reports_step(self, simulation_id: int) -> None:
         mutation_histogram.s(),
         simulation_report.s(),
         build_cell_model.s(),
-        save_result.s(simulation_id, step.id, workdir)
+        save_results_and_cleanup.s(simulation_id, step.id, workdir),
     ).apply_async()
     return result
 
@@ -266,7 +266,7 @@ def mutation_tree(self, workdir: str):
 
 
 @celery.task(name='SAVE-RESULT')
-def save_result(plots, simulation_id: int, step_id: int, workdir: str):
+def save_results_and_cleanup(plots, simulation_id: int, step_id: int, workdir: str):
     output_path: str = workdir + "/plots/"
     plots: List[Artifact] = index_plots(output_path, simulation_id, step_id)
     reports: List[Artifact] = index_reports(workdir + "/reports/", simulation_id, step_id)
@@ -284,6 +284,34 @@ def save_result(plots, simulation_id: int, step_id: int, workdir: str):
     db_session.add_all(reports)
     db_session.add_all([simulation, step])
     db_session.commit()
+    cleanup(workdir)
+    return workdir
+
+
+def cleanup(workdir: str):
+    # cli output
+    cli_output = os.path.join(workdir, 'cli_out.csv')
+    os.remove(cli_output)
+
+    # analyzer files
+    analyzer_output = os.path.join(workdir, 'output_data')
+    shutil.rmtree(analyzer_output)
+    analyzer_stream = os.path.join(workdir, 'stream.parquet')
+    shutil.rmtree(analyzer_stream)
+
+    # .las Models
+    models_root_path = os.path.join(workdir, 'models')
+    remove_by_extension(models_root_path, '.las')
+    return
+
+
+def remove_by_extension(path: str, extension: str) -> None:
+    paths = os.listdir(path)
+
+    for file in paths:
+        if file.endswith(extension):
+            os.remove(os.path.join(path, file))
+    return
 
 
 @celery.task
