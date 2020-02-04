@@ -1,18 +1,20 @@
+import datetime
 import logging
 
 from flask import Flask
 
+from database import init_db, init_engine, db_session
+from models.simulation import Simulation
+from models.simulation_step import SimulationStep
 from server.artifacts.api import artifact_api
 from server.encoder import AlchemyEncoder
-from server.pipeline.simulation.api import simulation_api
+from server.pipeline.analyzer import tasks as simbad_analyzer_task
+from server.pipeline.cli import tasks as simbad_cli_task
+from server.pipeline.reports import tasks as simbad_reports_task
 from server.pipeline.reports.api import reports_api
 from server.pipeline.simulation import tasks as simulation_tasks
-from server.pipeline.cli import tasks as simbad_cli_task
-from server.pipeline.analyzer import tasks as simbad_analyzer_task
-from server.pipeline.reports import tasks as simbad_reports_task
+from server.pipeline.simulation.api import simulation_api
 from server.pipeline.simulation.tasks import celery
-
-from database import init_db, init_engine
 
 logger = logging.getLogger()
 
@@ -50,6 +52,7 @@ def entrypoint(debug=False, mode='app'):
     app.register_blueprint(reports_api, url_prefix='/api/reports')
 
     if mode == 'app':
+        mark_ongoing_as_failed()
         return app
     elif mode == 'celery':
         return celery
@@ -97,3 +100,29 @@ def configure_logging(debug=True):
         root.setLevel(logging.DEBUG)
     else:
         root.setLevel(logging.INFO)
+
+
+def mark_ongoing_as_failed():
+    """
+    Marks all ongoing simulations and steps as failed. This method runs on app init
+    and any simulation that has status 'ONGOING' in db, is treated as failed
+    :return:
+    """
+    db_session.begin()
+    db_session.query(Simulation).filter(Simulation.status == 'ONGOING').update(
+        {
+            Simulation.status: 'FAILURE',
+            Simulation.finished_utc: datetime.datetime.utcnow()
+        }
+    )
+    db_session.commit()
+
+    db_session.begin()
+    db_session.query(SimulationStep).filter(SimulationStep.status == 'ONGOING').update(
+        {
+            SimulationStep.status: 'FAILURE',
+            SimulationStep.finished_utc: datetime.datetime.utcnow()
+        }
+    )
+    db_session.commit()
+    return
