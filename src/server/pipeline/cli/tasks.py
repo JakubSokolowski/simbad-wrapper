@@ -7,6 +7,7 @@ from time import sleep
 
 from config.settings import SIMBAD_CLI_BINARY_PATH, SIMBAD_CLI_EXECUTOR, POLLING_PERIOD
 from database import db_session
+from models.simulation import Simulation
 from models.simulation_step import SimulationStep
 from models.cli_runtime_info import CliRuntimeInfo
 from models.artifact import Artifact
@@ -56,6 +57,7 @@ def cli_step(self, artifact_id: int) -> int:
     """
     conf: Artifact = db_session.query(Artifact).get(artifact_id)
     step: SimulationStep = db_session.query(SimulationStep).get(conf.step_id)
+    simulation: Simulation = db_session.query(Simulation).get(conf.simulation_id)
     step.celery_id = self.request.id
     step.status = 'ONGOING'
     db_session.begin()
@@ -88,12 +90,15 @@ def cli_step(self, artifact_id: int) -> int:
     log: Artifact = executor.log
     if executor.status.error is not None:
         step.status = 'FAILURE'
+        simulation.status = 'FAILURE'
+        simulation.finished_utc = datetime.datetime.utcnow()
+        step.finished_utc = datetime.datetime.utcnow()
     else:
         step.status = 'SUCCESS'
-    step.status = 'SUCCESS'
+        step.finished_utc = datetime.datetime.utcnow()
+
     result.simulation_id = step.simulation_id
     log.simulation_id = step.simulation_id
-    step.finished_utc = datetime.datetime.utcnow()
     runtime_info.memory = 0
     runtime_info.cpu = 0
     runtime_info.progress = 100

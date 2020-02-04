@@ -278,6 +278,7 @@ def save_results_and_cleanup(plots, simulation_id: int, step_id: int, workdir: s
     db_session.begin()
     end_time = datetime.datetime.utcnow()
     simulation.finished_utc = end_time
+    simulation.status = 'SUCCESS'
     step.finished_utc = end_time
     step.status = 'SUCCESS'
     db_session.add_all(plots)

@@ -42,7 +42,7 @@ def setup_workdir(request_data: dict) -> Artifact:
 
     start_time = datetime.datetime.utcnow()
 
-    simulation = Simulation(started_utc=start_time, name="test_simulation", current_step="CLI")
+    simulation = Simulation(started_utc=start_time, name="test_simulation", current_step="CLI", status='ONGOING')
     db_session.add(simulation)
     db_session.flush()
     step = SimulationStep(started_utc=start_time, origin="CLI", simulation_id=simulation.id, status='ONGOING')

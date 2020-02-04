@@ -104,6 +104,7 @@ def to_simple_simulation_info(simulation: Simulation):
         "cli": get_cli_status(simulation),
         "analyzer": get_analyzer_status(simulation),
         "reports": get_reports_status(simulation),
+        "status": simulation.status
     }
     return simple_info
 

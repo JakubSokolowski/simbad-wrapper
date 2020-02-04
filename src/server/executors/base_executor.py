@@ -11,6 +11,7 @@ class BaseExecutor:
         self.is_finished = False
         self.result = None
         self.status = None
+        self.log = None
 
     def execute(self, in_file: Artifact) -> None:
         pass

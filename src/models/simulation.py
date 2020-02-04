@@ -24,10 +24,9 @@ class Simulation(Base):
     current_step_id = Column(Integer)
     workdir = Column(String())
     name = Column(String(50), unique=False)
+    status = Column(String())
     steps = relationship("SimulationStep", backref="simulations")
     artifacts = relationship("Artifact", backref="simulations")
 
     def __json__(self):
-        return ['id', 'started_utc', 'finished_utc', 'current_step', 'current_step_id', 'steps']
-
-
+        return ['id', 'started_utc', 'status', 'finished_utc', 'current_step', 'current_step_id', 'steps']

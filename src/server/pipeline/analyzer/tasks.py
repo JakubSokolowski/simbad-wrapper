@@ -129,6 +129,8 @@ def analyzer_step(self, artifact_id: int) -> int:
         print('Executor: ', executor.status.__dict__)
         print('Result', result)
         step.status = 'FAILURE'
+        simulation.status = 'FAILURE'
+        simulation.finished_utc = datetime.datetime.utcnow()
         step.finished_utc = datetime.datetime.utcnow()
         runtime_info.error = executor.status.error
         db_session.add_all(result)
